@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "54751907751",
     "project_id": "nutritrack-d1828",
-    "storage_bucket": "nutritrack-d1828.appspot.com"
+    "storage_bucket": "nutritrack-d1828.firebasestorage.app"
   },
   "client": [
     {
@@ -12,7 +12,20 @@
           "package_name": "com.example.nutritrack"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "54751907751-mad0dh09mak29t02rml13097ednn2gf8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.nutritrack",
+            "certificate_hash": "c7f6e4d922202bd2ecbbedc98921abce5bebe47d"
+          }
+        },
+        {
+          "client_id": "54751907751-0ei26793kp642f2eea77dua4mhh33bp4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCBhGqIVRGpsJ_ZfgAj0ErxPANDaf_GVwA"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "54751907751-0ei26793kp642f2eea77dua4mhh33bp4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "54751907751-jaqjvovglat1tkpa7gu339me0324dh19.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.nutritrack"
+              }
+            }
+          ]
         }
       }
     }
