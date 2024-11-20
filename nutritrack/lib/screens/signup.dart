@@ -147,16 +147,16 @@ class _SignupScreenState extends State<SignupScreen> {
                   icon: Icons.phone,
                 ),
               ),
-              if (_isOtpSent)
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  child: TextInputField(
-                    controller: _otpController,
-                    labelText: 'Enter OTP',
-                    icon: Icons.security,
-                  ),
+              if (_isOtpSent) const SizedBox(height: 15),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextInputField(
+                  controller: _otpController,
+                  labelText: 'Enter OTP',
+                  icon: Icons.security,
                 ),
+              ),
               const SizedBox(height: 15),
               Container(
                 width: MediaQuery.of(context).size.width,
