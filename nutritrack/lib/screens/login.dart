@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../../../constants.dart';
+import 'package:nutritrack/screens/signup.dart';
 import '../widgets/text_input_field.dart';
-import 'signup.dart';
+import 'home.dart'; // import the HomeScreen file
 
 class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});
@@ -68,6 +67,14 @@ class _LoginScreenState extends State<LoginScreen> {
         smsCode: _otpController.text,
       );
       await _auth.signInWithCredential(credential);
+
+      // Navigate to HomeScreen after successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => HomeScreen()), // Navigate to HomeScreen
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login successful!')),
       );
@@ -126,8 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               if (_isOtpSent)
                 Padding(
-                  padding: const EdgeInsets.only(
-                      top: 15.0), // Adjust the padding value as needed
+                  padding: const EdgeInsets.only(top: 15.0),
                   child: Container(
                     width: MediaQuery.of(context).size.width,
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -145,7 +151,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ElevatedButton(
                     onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Colors.orange, // NutriTrack button color
+                      foregroundColor: Colors.white, // Text color
                     ),
                     child: Text(_isOtpSent ? 'Verify OTP' : 'Send OTP'),
                   ),
@@ -155,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Handle login logic here
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.blue, // Blue color for login
+                      foregroundColor: Colors.white, // Text color
                     ),
                     child: const Text('Login'),
                   ),

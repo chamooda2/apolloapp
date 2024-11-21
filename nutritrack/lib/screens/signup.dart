@@ -260,14 +260,43 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
-                child: Text(_isOtpSent ? 'Verify OTP' : 'Send OTP'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.orange,
+                    ),
+                    child: Text(_isOtpSent ? 'Verify OTP' : 'Send OTP'),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _isOtpVerified
+                        ? _registerUser
+                        : null, // Disable before OTP verification
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor:
+                          _isOtpVerified ? Colors.blue : Colors.grey,
+                    ),
+                    child: const Text('Register'),
+                  ),
+                ],
               ),
               const SizedBox(height: 15),
-              ElevatedButton(
-                onPressed: _registerUser,
-                child: const Text('Register'),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
+                child: const Text(
+                  'Already have an account? Login',
+                  style: TextStyle(color: Colors.blue),
+                ),
               ),
             ],
           ),
