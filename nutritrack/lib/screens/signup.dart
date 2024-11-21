@@ -1,5 +1,10 @@
+// lib/screens/signup.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:nutritrack/models/user_model.dart';
+import 'package:nutritrack/screens/login.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nutritrack/models/role.dart'; // Import the shared Role enum
 
 import '../../../constants.dart';
 import '../widgets/text_input_field.dart';
@@ -17,19 +22,21 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _otpController = TextEditingController();
   final TextEditingController _employeeIdController = TextEditingController();
 
-  String _selectedRole = 'Nutritionist'; // Default role selection
+  Role _selectedRole = Role.Nutritionist; // Default role selection
   IconData _roleIcon = Icons.health_and_safety; // Default icon
   bool _isOtpSent = false; // Tracks if OTP has been sent
+  bool _isOtpVerified = false; // Tracks if OTP has been successfully verified
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String _verificationId = '';
 
   // Update role icon dynamically
-  void _updateRoleIcon(String role) {
+  void _updateRoleIcon(Role role) {
     setState(() {
       _selectedRole = role;
-      _roleIcon =
-          role == 'Nutritionist' ? Icons.health_and_safety : Icons.restaurant;
+      _roleIcon = role == Role.Nutritionist
+          ? Icons.health_and_safety
+          : Icons.restaurant;
     });
   }
 
@@ -43,12 +50,16 @@ class _SignupScreenState extends State<SignupScreen> {
           await _auth.signInWithCredential(credential);
           setState(() {
             _isOtpSent = false;
+            _isOtpVerified = true; // OTP is verified automatically
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Phone number verified successfully!')),
           );
         },
         verificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isOtpSent = false;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Verification failed: ${e.message}')),
           );
@@ -75,18 +86,72 @@ class _SignupScreenState extends State<SignupScreen> {
 
   // Verify OTP
   void _verifyOtp() async {
+    if (_otpController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter OTP')),
+      );
+      return;
+    }
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: _verificationId,
         smsCode: _otpController.text,
       );
       await _auth.signInWithCredential(credential);
+      setState(() {
+        _isOtpVerified = true; // OTP verified after manual entry
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Phone number verified successfully!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid OTP: $e')),
+      );
+    }
+  }
+
+  // Register user in Firestore
+  void _registerUser() async {
+    if (!_isOtpVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please verify your phone number first!')),
+      );
+      return;
+    }
+    try {
+      // Get the current user
+      User? user = _auth.currentUser;
+
+      if (user != null) {
+        // Create the UserModel instance
+        UserModel newUser = UserModel(
+          name: _nameController.text,
+          role: _selectedRole,
+          empID: _employeeIdController.text,
+          phoneNumber: _phoneController.text,
+          createdAt: DateTime.now(),
+        );
+
+        // Save user data to Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set(newUser.toMap());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration successful!')),
+        );
+
+        // Navigate to Login Screen after successful registration
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -147,21 +212,22 @@ class _SignupScreenState extends State<SignupScreen> {
                   icon: Icons.phone,
                 ),
               ),
-              if (_isOtpSent) const SizedBox(height: 15),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: TextInputField(
-                  controller: _otpController,
-                  labelText: 'Enter OTP',
-                  icon: Icons.security,
+              if (_isOtpSent)
+                Container(
+                  padding: const EdgeInsets.only(top: 15.0),
+                  width: MediaQuery.of(context).size.width,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TextInputField(
+                    controller: _otpController,
+                    labelText: 'Enter OTP',
+                    icon: Icons.security,
+                  ),
                 ),
-              ),
               const SizedBox(height: 15),
               Container(
                 width: MediaQuery.of(context).size.width,
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: DropdownButtonFormField<String>(
+                child: DropdownButtonFormField<Role>(
                   value: _selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Role',
@@ -170,10 +236,10 @@ class _SignupScreenState extends State<SignupScreen> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  items: ['Nutritionist', 'FNB Department']
+                  items: Role.values
                       .map((role) => DropdownMenuItem(
                             value: role,
-                            child: Text(role),
+                            child: Text(role.toString().split('.').last),
                           ))
                       .toList(),
                   onChanged: (value) {
@@ -194,48 +260,14 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                    ),
-                    child: Text(_isOtpSent ? 'Verify OTP' : 'Send OTP'),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle register logic here
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: const Text('Register'),
-                  ),
-                ],
+              ElevatedButton(
+                onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
+                child: Text(_isOtpSent ? 'Verify OTP' : 'Send OTP'),
               ),
               const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Already have an account? ',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      // Navigate to Login page
-                    },
-                    child: Text(
-                      'Login',
-                      style: TextStyle(fontSize: 20, color: Colors.blue),
-                    ),
-                  ),
-                ],
+              ElevatedButton(
+                onPressed: _registerUser,
+                child: const Text('Register'),
               ),
             ],
           ),
