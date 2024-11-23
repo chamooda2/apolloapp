@@ -1,26 +1,16 @@
-// home.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:nutritrack/widgets/patientcard.dart';
 import 'package:nutritrack/models/patient.dart';
 import 'package:nutritrack/controllers/patientdatacontroller.dart';
-import 'package:nutritrack/screens/calendar.dart';
-import 'package:nutritrack/screens/camera.dart';
-import 'package:nutritrack/screens/settings.dart';
-import 'patientlist.dart'; // Import PatientList widget
-// import 'calendar_screen.dart';
-// import 'camera_screen.dart';
-// import 'settings_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class PatientList extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _PatientListState createState() => _PatientListState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final PatientDataController _dataController = PatientDataController();
-  List<Patient> _patients = [];
-  int _currentIndex = 0;
+class _PatientListState extends State<PatientList> {
+  List<Patient> patients = [];
+  final PatientDataController _controller = PatientDataController();
 
   @override
   void initState() {
@@ -28,17 +18,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadPatients();
   }
 
-  void _loadPatients() async {
-    List<Patient> patients = await _dataController.fetchPatients();
+  // Fetch patients from Firebase
+  Future<void> _loadPatients() async {
+    List<Patient> fetchedPatients = await _controller.fetchPatients();
     setState(() {
-      _patients = patients;
+      patients = fetchedPatients;
     });
   }
 
+  // Show modal to add new patient
   void _showAddPatientModal(BuildContext context) {
     String name = '';
     String id = '';
-    String calorieIntake = '';
+    String calorieIntake =
+        ''; // Assuming this will be a string (you can parse it to an int if needed)
     String age = '';
 
     showModalBottomSheet(
@@ -87,7 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   onChanged: (value) {
                     calorieIntake = value;
                   },
@@ -99,24 +91,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   onChanged: (value) {
                     age = value;
                   },
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () async {
+                  onPressed: () {
+                    // Convert calorieIntake to boolean (true if not empty or valid, false if empty)
+                    bool foodServed = calorieIntake.isNotEmpty;
+                    bool foodEaten =
+                        false; // Set default to false for foodEaten
+                    int timeLeft =
+                        0; // Assuming 0 for timeLeft as a placeholder
+
+                    // Create a new Patient object
                     Patient newPatient = Patient(
-                      name: name,
                       id: id,
-                      foodServed: false,
-                      foodEaten: false,
-                      timeLeft: 20, // Default time
+                      name: name,
+                      foodServed: foodServed,
+                      foodEaten: foodEaten,
+                      timeLeft: timeLeft,
                     );
-                    await _dataController.addPatient(newPatient);
-                    _loadPatients(); // Refresh patient list
-                    Navigator.pop(context);
+
+                    // Add the new patient to Firebase
+                    _controller.addPatient(newPatient).then((_) {
+                      // Reload the patients after adding
+                      _loadPatients();
+                      Navigator.of(context).pop();
+                    });
                   },
                   child: Text('Add Patient'),
                 ),
@@ -128,64 +131,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('NutriTrack'),
+      body: patients.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+              itemCount: patients.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.2,
+              ),
+              itemBuilder: (context, index) {
+                final patient = patients[index];
+                return PatientCard(
+                  patientName: patient.name,
+                  patientId: patient.id,
+                  foodServed: patient.foodServed,
+                  foodEaten: patient.foodEaten,
+                  timeLeft: patient.timeLeft,
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddPatientModal(context),
+        child: Icon(Icons.add),
         backgroundColor: Colors.orange,
-        // foregroundColor: Colors.blue,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: IndexedStack(
-          index: _currentIndex,
-          children: [
-            // Patient List screen
-            PatientList(),
-            // CalendarScreen
-            CalendarScreen(),
-            // CameraScreen
-            CameraScreen(),
-            // SettingsScreen
-            SettingsScreen(),
-          ],
-        ),
-      ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => _showAddPatientModal(context),
-      //   child: Icon(Icons.add),
-      //   backgroundColor: Colors.orange,
-      // ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Timeline',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: 'Camera',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.grey,
       ),
     );
   }
