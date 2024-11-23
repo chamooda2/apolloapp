@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nutritrack/screens/signup.dart';
-import '../widgets/text_input_field.dart';
-import 'home.dart'; // import the HomeScreen file
+import 'package:nutritrack/screens/auth/signup.dart';
+import '../../widgets/text_input_field.dart';
+import '../home.dart'; // import the HomeScreen file
 
 class LoginScreen extends StatefulWidget {
   LoginScreen({super.key});

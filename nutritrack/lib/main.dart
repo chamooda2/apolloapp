@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nutritrack/screens/signup.dart';
+import 'package:nutritrack/screens/auth/signup.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 

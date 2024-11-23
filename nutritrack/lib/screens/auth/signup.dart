@@ -2,12 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nutritrack/models/user_model.dart';
-import 'package:nutritrack/screens/login.dart';
+import 'package:nutritrack/screens/auth/login.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nutritrack/models/role.dart'; // Import the shared Role enum
 
-import '../../../constants.dart';
-import '../widgets/text_input_field.dart';
+import '../../../../constants.dart';
+import '../../widgets/text_input_field.dart';
 
 class SignupScreen extends StatefulWidget {
   SignupScreen({Key? key}) : super(key: key);
